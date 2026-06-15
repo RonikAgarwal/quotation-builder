@@ -30,6 +30,9 @@ body {
 .layout--3col {
   grid-template-columns: 240px 1fr 340px;
 }
+.layout--full {
+  grid-template-columns: 1fr;
+}
 
 .main { display: flex; flex-direction: column; overflow: hidden; }
 .scroll-container { flex: 1; overflow-y: auto; padding-right: 4px; }
@@ -269,4 +272,22 @@ body {
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-8px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.page-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: rgba(31, 111, 235, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.2s;
+  line-height: 1;
+}
+.page-link:hover {
+  background: rgba(31, 111, 235, 0.2);
 }

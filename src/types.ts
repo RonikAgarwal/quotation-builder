@@ -57,6 +57,7 @@ export interface QuotationItem {
   id: string; // Unique row ID (generated on add, e.g. uuid or timestamp)
   productId?: string; // Links back to the original catalog product ID if applicable
   familyId: string; // Keep for image thumbnails
+  sourcePage?: number; // Page number in the original catalog
   name: string; // Initially: product.displayTitle, then completely editable
   subtitle: string; // Initially: product.displaySubtitle, then editable
   mrp: number | ''; // Kept as number | '' so clearing the input doesn't force '0'

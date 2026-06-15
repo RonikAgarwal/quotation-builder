@@ -29,6 +29,7 @@ export function createItemFromProduct(p: Product, qty: number = 1): QuotationIte
     discountPercent: 0,
     discountedPrice: mrp,
     quantity: qty,
+    sourcePage: p.sourcePage,
     customImageBase64: p.customImageBase64,
   };
 }
@@ -92,6 +93,15 @@ export function useQuotation() {
     });
   }, []);
 
+  const reorderRows = useCallback((fromIndex: number, toIndex: number) => {
+    setState((s) => {
+      const newItems = [...s.items];
+      const [moved] = newItems.splice(fromIndex, 1);
+      newItems.splice(toIndex, 0, moved);
+      return { ...s, items: newItems };
+    });
+  }, []);
+
   const removeRow = useCallback((id: string) => {
     setState((s) => ({
       ...s,
@@ -142,6 +152,7 @@ export function useQuotation() {
     duplicateRow,
     removeRow,
     updateRow,
+    reorderRows,
     applyGlobalDiscount,
     clearQuotation,
     loadQuotation,

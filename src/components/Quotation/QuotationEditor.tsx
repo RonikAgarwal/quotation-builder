@@ -16,6 +16,7 @@ interface Props {
   applyGlobalDiscount: (pct: number) => void;
   clearQuotation: () => void;
   onBackToSearch: () => void;
+  reorderRows: (fromIndex: number, toIndex: number) => void;
 }
 
 export function QuotationEditor({
@@ -28,8 +29,12 @@ export function QuotationEditor({
   applyGlobalDiscount,
   clearQuotation,
   onBackToSearch,
+  reorderRows,
 }: Props) {
   const [globalDisc, setGlobalDisc] = useState('');
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
+  const [dragEnabled, setDragEnabled] = useState(false);
   const { saveToHistory } = useCloudHistory();
   const { showConfirm } = usePopup();
 
@@ -143,16 +148,44 @@ export function QuotationEditor({
               No products added to quotation.
             </div>
           ) : (
-            state.items.map((item, index) => (
-              <QuotationRow
-                key={item.id}
-                item={item}
-                index={index}
-                onChange={updateRow}
-                onDuplicate={duplicateRow}
-                onRemove={removeRow}
-              />
-            ))
+            state.items.map((item, index) => {
+              return (
+                <QuotationRow
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  onChange={updateRow}
+                  onDuplicate={duplicateRow}
+                  onRemove={removeRow}
+                  draggable={dragEnabled}
+                  isDragTarget={dragTargetIndex === index}
+                  onDragStart={(e) => {
+                    setDraggedIndex(index);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                      setDragTargetIndex(index);
+                    }
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (draggedIndex !== null && draggedIndex !== index) {
+                      reorderRows(draggedIndex, index);
+                    }
+                    setDraggedIndex(null);
+                    setDragTargetIndex(null);
+                  }}
+                  onDragEnd={() => {
+                    setDraggedIndex(null);
+                    setDragTargetIndex(null);
+                  }}
+                  setDraggable={setDragEnabled}
+                />
+              );
+            })
           )}
         </div>
 

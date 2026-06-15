@@ -42,7 +42,14 @@ export function FamilyGridCard({ familyId, firstProduct, allProducts, imageMap, 
       </div>
       
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px', borderBottom: '1px solid var(--border)' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>{firstProduct.displayTitle}</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600 }}>{firstProduct.displayTitle}</h3>
+          {firstProduct.sourcePage > 0 && (
+            <a href={`#/pdf/${firstProduct.sourcePage}`} className="page-link" onClick={e => e.stopPropagation()}>
+              📄 {firstProduct.sourcePage}
+            </a>
+          )}
+        </div>
         {firstProduct.category && (
           <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
             {firstProduct.category} {firstProduct.variant ? `• ${firstProduct.variant}` : ''}

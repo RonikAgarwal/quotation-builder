@@ -43,9 +43,16 @@ export const ProductCard = memo(function ProductCard({ product, selected, active
       </div>
       <div className="card__body">
         <div className="card__title">{product.displayTitle}</div>
-        {product.displaySubtitle && (
-          <div className="card__subtitle">{product.displaySubtitle}</div>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+          {product.displaySubtitle && (
+            <div className="card__subtitle" style={{ margin: 0 }}>{product.displaySubtitle}</div>
+          )}
+          {product.sourcePage > 0 && (
+            <a href={`#/pdf/${product.sourcePage}`} className="page-link" onClick={e => e.stopPropagation()}>
+              📄 {product.sourcePage}
+            </a>
+          )}
+        </div>
       </div>
       <div className="card__price">{product.displayPrice}</div>
     </div>

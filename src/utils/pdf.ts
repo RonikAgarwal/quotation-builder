@@ -67,6 +67,8 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
   }
 
   // --- Table Section ---
+  const hasImages = loadedImages.size > 0;
+
   // We extract the table rows
   const tableData = state.items.map((item, index) => {
     // Format numeric columns
@@ -80,20 +82,38 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
     // Combine Name and Subtitle cleanly into one column.
     const productCell = item.subtitle ? `${item.name}\n(${item.subtitle})` : item.name;
 
-    return [
+    const row = [
       (index + 1).toString(),
-      '', // Placeholder for Image
-      productCell,
-      discPrice,
-      qty,
-      lineTotal
     ];
+    if (hasImages) {
+      row.push(''); // Placeholder for Image
+    }
+    row.push(productCell, discPrice, qty, lineTotal);
+    return row;
   });
+
+  const headRow = ['#'];
+  if (hasImages) {
+    headRow.push('Img');
+  }
+  headRow.push('Product', 'Price', 'Qty', 'Total');
+
+  const columnStyles: any = {
+    0: { halign: 'center', cellWidth: 10 },
+  };
+  let colIdx = 1;
+  if (hasImages) {
+    columnStyles[colIdx++] = { halign: 'center', cellWidth: 15 }; // Img
+  }
+  columnStyles[colIdx++] = { halign: 'left' }; // Product
+  columnStyles[colIdx++] = { halign: 'right', cellWidth: 22 }; // Price
+  columnStyles[colIdx++] = { halign: 'center', cellWidth: 12 }; // Qty
+  columnStyles[colIdx++] = { halign: 'right', cellWidth: 25 }; // Total
 
   autoTable(doc, {
     startY: 75,
     rowPageBreak: 'avoid', // Prevents rows from splitting across pages
-    head: [['#', 'Img', 'Product', 'Price', 'Qty', 'Total']],
+    head: [headRow],
     body: tableData,
     theme: 'grid',
     headStyles: {
@@ -102,14 +122,7 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
       fontStyle: 'bold',
       halign: 'center',
     },
-    columnStyles: {
-      0: { halign: 'center', cellWidth: 10 },
-      1: { halign: 'center', cellWidth: 15 }, // Img column
-      2: { halign: 'left' },
-      3: { halign: 'right', cellWidth: 22 },
-      4: { halign: 'center', cellWidth: 12 },
-      5: { halign: 'right', cellWidth: 25 },
-    },
+    columnStyles,
     styles: {
       fontSize: 10,
       cellPadding: 3,
@@ -117,8 +130,8 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
       minCellHeight: 16, // Ensure cells are tall enough for images
     },
     didDrawCell: function (data) {
-      // Draw image in column 1
-      if (data.section === 'body' && data.column.index === 1) {
+      // Draw image in column 1 (if present)
+      if (hasImages && data.section === 'body' && data.column.index === 1) {
         const item = state.items[data.row.index];
         if (item) {
           const img = item.customImageBase64 ? loadedImages.get(item.id) : (item.familyId ? loadedImages.get(item.familyId) : undefined);

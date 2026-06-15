@@ -60,9 +60,16 @@ export function SelectedPanel({ items, count, onRemove, onNavigateQuotation, ima
               </div>
               <div className="selected-item__body" style={{ flex: 1, minWidth: 0 }}>
                 <div className="card__title">{p.name}</div>
-                {p.subtitle && (
-                  <div className="card__subtitle">{p.subtitle}</div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                  {p.subtitle && (
+                    <div className="card__subtitle" style={{ margin: 0 }}>{p.subtitle}</div>
+                  )}
+                  {p.sourcePage && p.sourcePage > 0 && (
+                    <a href={`#/pdf/${p.sourcePage}`} className="page-link" onClick={e => e.stopPropagation()}>
+                      📄 {p.sourcePage}
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="selected-item__price" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                 <span>{typeof p.mrp === 'number' ? `₹${p.mrp}` : 'Price NA'}</span>

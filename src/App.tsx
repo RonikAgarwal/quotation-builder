@@ -17,13 +17,15 @@ import { HistoryView } from './components/HistoryView/HistoryView';
 import { useAuth } from './hooks/useAuth';
 import type { RenderItem } from './types';
 
+import { useRouting } from './hooks/useRouting';
+
 export function App() {
   const { status, catalog, index, error } = useCatalog();
   const recent = useRecent();
   const quotation = useQuotation();
   const { user, login, logout } = useAuth();
+  const { view, pdfPage, navigate } = useRouting();
 
-  const [view, setView] = useState<'search' | 'quotation' | 'images' | 'pdf' | 'history'>('search');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isGridView, setIsGridView] = useState(true);
   const [query, setQuery] = useState('');
@@ -34,7 +36,6 @@ export function App() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [imageMap, setImageMap] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [pdfPage, setPdfPage] = useState(1);
   const [promptProduct, setPromptProduct] = useState<Product | null>(null);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export function App() {
   };
 
   const handleNavigateQuotation = () => {
-    setView('quotation');
+    navigate('quotation');
   };
 
   function toggleGroup(familyId: string) {
@@ -210,7 +211,7 @@ export function App() {
         catalog={catalog}
         imageMap={imageMap}
         onImageUploaded={handleImageUploaded}
-        onBack={() => setView('search')}
+        onBack={() => navigate('search')}
       />
     );
   }
@@ -226,7 +227,8 @@ export function App() {
         addBlankRow={quotation.addBlankRow}
         applyGlobalDiscount={quotation.applyGlobalDiscount}
         clearQuotation={quotation.clearQuotation}
-        onBackToSearch={() => setView('search')}
+        onBackToSearch={() => navigate('search')}
+        reorderRows={quotation.reorderRows}
       />
     );
   }
@@ -240,7 +242,7 @@ export function App() {
   ];
 
   return (
-    <div className="layout">
+    <div className={`layout ${view === 'history' ? 'layout--full' : ''}`}>
       {/* Floating overlay menu */}
       {isSidebarOpen && (
         <>
@@ -260,15 +262,15 @@ export function App() {
               </button>
             </div>
             <nav className="menu-overlay__nav">
-              <button className="menu-overlay__item" onClick={() => { setView('search'); setSidebarOpen(false); }}>
+              <button className="menu-overlay__item" onClick={() => { navigate('search'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">🔍</span>
                 Search Products
               </button>
-              <button className="menu-overlay__item" onClick={() => { setView('pdf'); setSidebarOpen(false); }}>
+              <button className="menu-overlay__item" onClick={() => { navigate('pdf'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">📄</span>
                 View Original Catalog
               </button>
-              <button className="menu-overlay__item" onClick={() => { setView('history'); setSidebarOpen(false); }}>
+              <button className="menu-overlay__item" onClick={() => { navigate('history'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">🕒</span>
                 Previous Quotations
               </button>
@@ -279,12 +281,26 @@ export function App() {
                     <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>Signed in as</div>
                     <div style={{ fontWeight: 500, marginBottom: '16px', wordBreak: 'break-all' }}>{user.email}</div>
                     <button className="menu-overlay__item" onClick={() => { logout(); setSidebarOpen(false); }} style={{ color: '#d32f2f' }}>
-                      <span className="menu-overlay__icon">🚪</span> Sign Out
+                      <span className="menu-overlay__icon" style={{ display: 'flex', alignItems: 'center' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                          <polyline points="16 17 21 12 16 7"></polyline>
+                          <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                      </span>
+                      Sign Out
                     </button>
                   </div>
                 ) : (
                   <button className="menu-overlay__item" onClick={() => { login(); setSidebarOpen(false); }} style={{ color: 'var(--accent)' }}>
-                    <span className="menu-overlay__icon">🔑</span> Sign In with Google
+                    <span className="menu-overlay__icon" style={{ display: 'flex', alignItems: 'center' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                      </svg>
+                    </span>
+                    Sign In with Google
                   </button>
                 )}
               </div>
@@ -296,10 +312,10 @@ export function App() {
       <main className="main">
         {view === 'history' ? (
           <HistoryView
-            onBack={() => setView('search')}
+            onBack={() => navigate('search')}
             onEdit={(state) => {
               quotation.loadQuotation(state);
-              setView('quotation');
+              navigate('quotation');
             }}
           />
         ) : view === 'pdf' ? (
@@ -312,7 +328,13 @@ export function App() {
               >
                 ☰
               </button>
-              <img src="/logo.png" alt="Shree Ganesh Hardware Logo" className="brand-logo" />
+              <img 
+                src="/logo.png" 
+                alt="Shree Ganesh Hardware Logo" 
+                className="brand-logo" 
+                onClick={() => navigate('search')}
+                style={{ cursor: 'pointer' }}
+              />
               <div className="header-text">
                 <h1>Original Catalog</h1>
                 <p className="sub">Browse the full product catalog</p>
@@ -323,7 +345,7 @@ export function App() {
                 <button
                   key={c.label}
                   className={`chip ${pdfPage === c.page ? 'chip--on' : ''}`}
-                  onClick={() => setPdfPage(c.page)}
+                  onClick={() => navigate('pdf', c.page)}
                 >
                   {c.label}
                 </button>
@@ -340,6 +362,7 @@ export function App() {
               />
             </div>
           </>
+
         ) : (
           <>
             <header className="header">
@@ -350,7 +373,13 @@ export function App() {
               >
                 ☰
               </button>
-              <img src="/logo.png" alt="Shree Ganesh Hardware Logo" className="brand-logo" />
+              <img 
+                src="/logo.png" 
+                alt="Shree Ganesh Hardware Logo" 
+                className="brand-logo" 
+                onClick={() => navigate('search')}
+                style={{ cursor: 'pointer' }}
+              />
               <div className="header-text">
                 <h1>Shree Ganesh Hardware</h1>
                 <p className="sub">Quotation Builder</p>
@@ -416,15 +445,19 @@ export function App() {
         )}
       </main>
 
-      <SelectedPanel
-        items={quotation.state.items}
-        count={quotation.state.items.length}
-        onRemove={quotation.removeRow}
-        onNavigateQuotation={handleNavigateQuotation}
-        imageMap={imageMap}
-        onAddCustomProduct={(prod) => quotation.appendProducts([prod])}
-        onImageUploaded={handleImageUploaded}
-      />
+
+
+      {(view === 'search' || view === 'pdf') && (
+        <SelectedPanel
+          items={quotation.state.items}
+          count={quotation.state.items.length}
+          onRemove={quotation.removeRow}
+          onNavigateQuotation={handleNavigateQuotation}
+          imageMap={imageMap}
+          onAddCustomProduct={(prod) => quotation.appendProducts([prod])}
+          onImageUploaded={handleImageUploaded}
+        />
+      )}
 
       {promptProduct && (
         <QuantityPrompt

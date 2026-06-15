@@ -7,9 +7,29 @@ interface Props {
   onChange: (id: string, updates: Partial<QuotationItem>) => void;
   onDuplicate: (id: string) => void;
   onRemove: (id: string) => void;
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: () => void;
+  setDraggable?: (val: boolean) => void;
+  isDragTarget?: boolean;
 }
 
-export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: Props) {
+export function QuotationRow({
+  item,
+  index,
+  onChange,
+  onDuplicate,
+  onRemove,
+  draggable,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  setDraggable,
+  isDragTarget,
+}: Props) {
   // Helpers for bidirectional math. We round to 2 decimals to avoid float weirdness.
   const round2 = (num: number) => Math.round(num * 100) / 100;
 
@@ -33,7 +53,7 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
   const handleDiscountPercentChange = (e: ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     if (raw === '') {
-      onChange(item.id, { discountPercent: '', discountedPrice: item.mrp });
+      onChange(item.id, { discountPercent: '' });
       return;
     }
     const val = parseFloat(raw);
@@ -56,12 +76,26 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
     const val = parseFloat(raw);
     if (isNaN(val)) return;
 
-    // Source of truth: Discounted Price. Compute new discount %.
+    const isCustom = !item.familyId;
     let newDiscPct = item.discountPercent;
-    if (typeof item.mrp === 'number' && item.mrp > 0) {
-      newDiscPct = round2(((item.mrp - val) / item.mrp) * 100);
+    let newMrp = item.mrp;
+    
+    if (isCustom) {
+      const pct = typeof item.discountPercent === 'number' ? item.discountPercent : 0;
+      if (pct < 100) {
+        newMrp = round2(val / (1 - pct / 100));
+      } else {
+        newMrp = val;
+      }
+    } else {
+      if (typeof item.mrp === 'number' && item.mrp > 0) {
+        newDiscPct = round2(((item.mrp - val) / item.mrp) * 100);
+      } else {
+        newMrp = val;
+        newDiscPct = 0;
+      }
     }
-    onChange(item.id, { discountedPrice: val, discountPercent: newDiscPct });
+    onChange(item.id, { discountedPrice: val, discountPercent: newDiscPct, mrp: newMrp });
   };
 
   const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -79,6 +113,40 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
   // Prevent characters like 'e' or '+' in number inputs to keep UI clean
   const blockInvalidChars = (e: KeyboardEvent<HTMLInputElement>) => {
     if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+  };
+
+  const handleTotalChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    if (raw === '') {
+      onChange(item.id, { discountedPrice: '', discountPercent: '' });
+      return;
+    }
+    const val = parseFloat(raw);
+    if (isNaN(val)) return;
+
+    const qty = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+    const newDiscountedPrice = round2(val / qty);
+
+    const isCustom = !item.familyId;
+    let newDiscPct = item.discountPercent;
+    let newMrp = item.mrp;
+    
+    if (isCustom) {
+      const pct = typeof item.discountPercent === 'number' ? item.discountPercent : 0;
+      if (pct < 100) {
+        newMrp = round2(newDiscountedPrice / (1 - pct / 100));
+      } else {
+        newMrp = newDiscountedPrice;
+      }
+    } else {
+      if (typeof item.mrp === 'number' && item.mrp > 0) {
+        newDiscPct = round2(((item.mrp - newDiscountedPrice) / item.mrp) * 100);
+      } else {
+        newMrp = newDiscountedPrice;
+        newDiscPct = 0;
+      }
+    }
+    onChange(item.id, { discountedPrice: newDiscountedPrice, discountPercent: newDiscPct, mrp: newMrp });
   };
 
   // Calculate Line Total
@@ -129,16 +197,35 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
   };
 
   return (
-    <div className="q-row">
+    <div 
+      className={`q-row ${isDragTarget ? 'q-row--drag-target' : ''}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      style={{
+        borderTop: isDragTarget ? '2px solid var(--accent)' : undefined
+      }}
+    >
       <div className="q-col q-col--index">{index + 1}</div>
 
       <div className="q-col q-col--product">
         <div className="q-product-cell">
-          <div className="q-product-thumb" style={{ position: 'relative', overflow: 'hidden' }}>
+          <div 
+            className="q-product-thumb" 
+            style={{ position: 'relative', overflow: 'hidden', cursor: 'grab' }}
+            onMouseEnter={() => setDraggable && setDraggable(true)}
+            onMouseLeave={() => setDraggable && setDraggable(false)}
+            onTouchStart={() => setDraggable && setDraggable(true)}
+            onTouchEnd={() => setDraggable && setDraggable(false)}
+            title="Drag to reorder"
+          >
             {item.customImageBase64 ? (
               <img 
                 src={item.customImageBase64} 
                 alt=""
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : item.familyId ? (
               <img 
@@ -168,70 +255,79 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
               className="q-input-title"
               placeholder="Product Name"
             />
-            <input
-              type="text"
-              value={item.subtitle}
-              onChange={(e) => onChange(item.id, { subtitle: e.target.value })}
-              className="q-input-sub"
-              placeholder="Subtitle"
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="text"
+                value={item.subtitle}
+                onChange={(e) => onChange(item.id, { subtitle: e.target.value })}
+                className="q-input-sub"
+                placeholder="Subtitle"
+                style={{ flex: 1 }}
+              />
+              {item.sourcePage !== undefined && item.sourcePage > 0 ? (
+                <a href={`#/pdf/${item.sourcePage}`} className="page-link" onClick={e => e.stopPropagation()}>
+                  📄 {item.sourcePage}
+                </a>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="q-col q-col--num">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="q-input q-input--num"
           value={item.mrp}
           onChange={handleMrpChange}
           onKeyDown={blockInvalidChars}
-          min="0"
-          step="any"
         />
       </div>
 
       <div className="q-col q-col--num">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="q-input q-input--num"
           value={item.discountPercent}
           onChange={handleDiscountPercentChange}
           onKeyDown={blockInvalidChars}
-          min="0"
-          step="any"
         />
       </div>
 
       <div className="q-col q-col--num">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="q-input q-input--num"
           value={item.discountedPrice}
           onChange={handleDiscountedPriceChange}
           onKeyDown={blockInvalidChars}
-          min="0"
-          step="any"
         />
       </div>
 
       <div className="q-col q-col--num">
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           className="q-input q-input--num"
           value={item.quantity}
           onChange={handleQuantityChange}
           onKeyDown={blockInvalidChars}
-          min="0"
-          step="any"
         />
       </div>
 
       <div className="q-col q-col--total">
-        {lineTotal.toLocaleString('en-IN', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}
+        <input
+          type="text"
+          inputMode="decimal"
+          className="q-input q-input--num"
+          style={{ fontWeight: 600, color: 'var(--accent)' }}
+          value={lineTotal === 0 && item.discountedPrice === '' ? '' : lineTotal}
+          onChange={handleTotalChange}
+          onKeyDown={blockInvalidChars}
+        />
       </div>
 
       <div className="q-col q-col--actions">
