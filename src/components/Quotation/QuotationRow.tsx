@@ -90,25 +90,41 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const newFamilyId = item.familyId || `custom_blank_${item.id}`;
-      
-      try {
-        const response = await fetch('/api/upload-image', {
-          method: 'POST',
-          headers: { 'x-family-id': newFamilyId },
-          body: file
-        });
-        if (response.ok) {
-           onChange(item.id, { familyId: newFamilyId });
-           // Small hack to force image reload by clearing and resetting
-           setTimeout(() => {
-             const img = document.getElementById(`img-${newFamilyId}`) as HTMLImageElement;
-             if (img) img.src = `/product-images/${newFamilyId}.jpg?t=${Date.now()}`;
-           }, 100);
-        }
-      } catch (err) {
-        alert('Failed to upload image');
-      }
+      if (!file.type.startsWith('image/')) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          const MAX = 200;
+          if (width > height) {
+            if (width > MAX) {
+              height *= MAX / width;
+              width = MAX;
+            }
+          } else {
+            if (height > MAX) {
+              width *= MAX / height;
+              height = MAX;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+            onChange(item.id, { customImageBase64: dataUrl });
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -119,7 +135,12 @@ export function QuotationRow({ item, index, onChange, onDuplicate, onRemove }: P
       <div className="q-col q-col--product">
         <div className="q-product-cell">
           <div className="q-product-thumb" style={{ position: 'relative', overflow: 'hidden' }}>
-            {item.familyId ? (
+            {item.customImageBase64 ? (
+              <img 
+                src={item.customImageBase64} 
+                alt=""
+              />
+            ) : item.familyId ? (
               <img 
                 id={`img-${item.familyId}`}
                 src={`/product-images/${item.familyId}.jpg`} 

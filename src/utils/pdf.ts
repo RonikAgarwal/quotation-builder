@@ -53,7 +53,12 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
 
   const loadedImages = new Map<string, HTMLImageElement>();
   for (const item of state.items) {
-    if (item.familyId && imageMap[item.familyId] && !loadedImages.has(item.familyId)) {
+    if (item.customImageBase64 && !loadedImages.has(item.id)) {
+      try {
+        const img = await loadImage(item.customImageBase64);
+        loadedImages.set(item.id, img);
+      } catch (e) {}
+    } else if (item.familyId && imageMap[item.familyId] && !loadedImages.has(item.familyId)) {
       try {
         const img = await loadImage(`/product-images/${item.familyId}.jpg`);
         loadedImages.set(item.familyId, img);
@@ -115,13 +120,13 @@ export async function generatePDF(state: QuotationState, grandTotal: number) {
       // Draw image in column 1
       if (data.section === 'body' && data.column.index === 1) {
         const item = state.items[data.row.index];
-        if (item && item.familyId) {
-          const img = loadedImages.get(item.familyId);
+        if (item) {
+          const img = item.customImageBase64 ? loadedImages.get(item.id) : (item.familyId ? loadedImages.get(item.familyId) : undefined);
           if (img) {
             const dim = 12; // 12x12 image
             const x = data.cell.x + (data.cell.width - dim) / 2;
             const y = data.cell.y + (data.cell.height - dim) / 2;
-            doc.addImage(img, 'PNG', x, y, dim, dim);
+            doc.addImage(img, 'JPEG', x, y, dim, dim);
           }
         }
       }

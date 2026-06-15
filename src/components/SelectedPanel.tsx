@@ -50,7 +50,9 @@ export function SelectedPanel({ items, count, onRemove, onNavigateQuotation, ima
           items.map((p) => (
             <div key={p.id} className="selected-item" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <div className="card__thumbnail" style={{ width: '40px', height: '40px', flexShrink: 0 }}>
-                {imageMap[p.familyId] ? (
+                {p.customImageBase64 ? (
+                  <img src={p.customImageBase64} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                ) : imageMap[p.familyId] ? (
                   <img src={`/product-images/${p.familyId}.jpg`} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 ) : (
                   <div className="card__thumbnail-placeholder" style={{ fontSize: '8px' }}>No Img</div>

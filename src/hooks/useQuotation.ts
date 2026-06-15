@@ -29,6 +29,7 @@ export function createItemFromProduct(p: Product, qty: number = 1): QuotationIte
     discountPercent: 0,
     discountedPrice: mrp,
     quantity: qty,
+    customImageBase64: p.customImageBase64,
   };
 }
 
