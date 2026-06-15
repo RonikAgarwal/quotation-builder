@@ -28,7 +28,13 @@ export function FamilyGridCard({ familyId, firstProduct, allProducts, imageMap, 
       flexDirection: 'column'
     }}>
       <div style={{ padding: '16px', borderBottom: '1px solid var(--border)', textAlign: 'center', background: 'var(--bg)' }}>
-        {imageMap[familyId] ? (
+        {firstProduct.customImageBase64 ? (
+          <img 
+            src={firstProduct.customImageBase64} 
+            alt={firstProduct.displayTitle} 
+            style={{ width: '100%', height: '180px', objectFit: 'contain' }}
+          />
+        ) : imageMap[familyId] ? (
           <img 
             src={`/product-images/${familyId}.jpg`} 
             alt={firstProduct.displayTitle} 

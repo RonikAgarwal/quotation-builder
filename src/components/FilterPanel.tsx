@@ -24,8 +24,14 @@ export function FilterPanel({
     <div className="filters-container">
       <div className="filters">
         <button
-          className={`chip${active === null ? ' chip--on' : ''}`}
-          onClick={() => onChange(null)}
+          className={`chip${active === 'recent' ? ' chip--on' : ''}`}
+          onClick={() => onChange('recent')}
+        >
+          Recent
+        </button>
+        <button
+          className={`chip${active === 'all' ? ' chip--on' : ''}`}
+          onClick={() => onChange('all')}
         >
           All
         </button>
@@ -38,6 +44,12 @@ export function FilterPanel({
             {c}
           </button>
         ))}
+        <button
+          className={`chip${active === 'custom' ? ' chip--on' : ''}`}
+          onClick={() => onChange('custom')}
+        >
+          Custom
+        </button>
       </div>
       
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>

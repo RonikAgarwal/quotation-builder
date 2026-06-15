@@ -21,7 +21,6 @@ export function ResultsList({ items, activeIndex, isSelected, onToggle, onToggle
         if (item.type === 'group') {
           const isExpanded = expandedGroups.has(item.familyId);
           const p = item.firstProduct;
-          const hasImage = imageMap[p.familyId];
 
           return (
             <div 
@@ -34,10 +33,12 @@ export function ResultsList({ items, activeIndex, isSelected, onToggle, onToggle
               </div>
               
               <div className="card__thumbnail">
-                {hasImage ? (
-                  <img src={`/product-images/${p.familyId}.jpg`} alt={p.productName} loading="lazy" />
+                {item.firstProduct.customImageBase64 ? (
+                  <img src={item.firstProduct.customImageBase64} alt="" style={{ objectFit: 'contain' }} />
+                ) : imageMap[item.familyId] ? (
+                  <img src={`/product-images/${item.familyId}.jpg`} alt="" />
                 ) : (
-                  <div className="card__thumbnail-placeholder">No Image</div>
+                  <div className="card__thumbnail-placeholder">No Img</div>
                 )}
               </div>
 

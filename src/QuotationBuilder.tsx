@@ -15,21 +15,23 @@ import { ImageManager } from './components/ImageManager/ImageManager';
 import { QuantityPrompt } from './components/QuantityPrompt';
 import { HistoryView } from './components/HistoryView/HistoryView';
 import { useAuth } from './hooks/useAuth';
+import { useCustomProducts } from './hooks/useCustomProducts';
 import type { RenderItem } from './types';
 
 import { useRouting } from './hooks/useRouting';
 
-export function App() {
+export function QuotationBuilder() {
   const { status, catalog, index, error } = useCatalog();
   const recent = useRecent();
   const quotation = useQuotation();
   const { user, login, logout } = useAuth();
   const { view, pdfPage, navigate } = useRouting();
+  const { customProducts, addCustomProduct } = useCustomProducts(user?.uid);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isGridView, setIsGridView] = useState(true);
   const [query, setQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>('all');
   const [activeVariant, setActiveVariant] = useState<string | null>(null);
   const [activeSize, setActiveSize] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -64,9 +66,15 @@ export function App() {
 
   const availableVariants = useMemo(() => {
     if (!catalog) return [];
-    const prods = activeCategory === null 
-      ? catalog.all 
-      : catalog.all.filter((p) => p.category === activeCategory);
+    
+    let prods: Product[];
+    if (activeCategory === 'custom') {
+      prods = customProducts;
+    } else if (activeCategory === 'all' || activeCategory === 'recent') {
+      prods = [...customProducts, ...catalog.all];
+    } else {
+      prods = catalog.all.filter((p) => p.category === activeCategory);
+    }
     
     const variants = new Set<string>();
     for (const p of prods) {
@@ -79,8 +87,16 @@ export function App() {
 
   const availableSizes = useMemo(() => {
     if (!catalog) return [];
-    let prods = catalog.all;
-    if (activeCategory) prods = prods.filter(p => p.category === activeCategory);
+    
+    let prods: Product[];
+    if (activeCategory === 'custom') {
+      prods = customProducts;
+    } else if (activeCategory === 'all' || activeCategory === 'recent') {
+      prods = [...customProducts, ...catalog.all];
+    } else {
+      prods = catalog.all.filter((p) => p.category === activeCategory);
+    }
+
     if (activeVariant) prods = prods.filter(p => p.variant === activeVariant);
     
     const sizes = new Set<string>();
@@ -92,11 +108,18 @@ export function App() {
   }, [catalog, activeCategory, activeVariant]);
 
   const renderItems = useMemo<RenderItem[]>(() => {
-    if (!index || !catalog || isEmptyQuery) return [];
+    if (!index || !catalog || activeCategory === 'recent') return [];
     
-    let scopedProducts = activeCategory === null 
-      ? catalog.all 
-      : catalog.all.filter((p) => p.category === activeCategory);
+    let baseProducts: Product[];
+    if (activeCategory === 'custom') {
+      baseProducts = customProducts;
+    } else if (activeCategory === 'all') {
+      baseProducts = [...customProducts, ...catalog.all];
+    } else {
+      baseProducts = catalog.all.filter((p) => p.category === activeCategory);
+    }
+
+    let scopedProducts = baseProducts;
 
     if (activeVariant !== null) {
       scopedProducts = scopedProducts.filter((p) => p.variant === activeVariant);
@@ -105,14 +128,34 @@ export function App() {
       scopedProducts = scopedProducts.filter((p) => p.size === activeSize);
     }
 
-    // Always fetch a large chunk of items so grouping is complete
-    const searchHits = runSearch(scopedProducts, index, query, 2000);
-    const filteredHits = searchHits.filter((p) => {
-      if (activeCategory !== null && p.category !== activeCategory) return false;
-      if (activeVariant !== null && p.variant !== activeVariant) return false;
-      if (activeSize !== null && p.size !== activeSize) return false;
-      return true;
-    });
+    let filteredHits = scopedProducts;
+    if (!isEmptyQuery) {
+      if (activeCategory === 'custom') {
+        const qStr = query.toLowerCase();
+        filteredHits = scopedProducts.filter(p => p.productName.toLowerCase().includes(qStr));
+      } else {
+        const qStr = query.toLowerCase();
+        const customHits = activeCategory === 'all' 
+          ? customProducts.filter(p => p.productName.toLowerCase().includes(qStr) || (p.category && p.category.toLowerCase().includes(qStr)))
+          : [];
+        const catalogHits = runSearch(scopedProducts, index, query, 2000);
+        filteredHits = [...catalogHits, ...customHits];
+      }
+    } else {
+      // Empty query but category is selected: sort by page number
+      filteredHits = [...scopedProducts].sort((a, b) => {
+        const isCustomA = a.id.startsWith('custom_');
+        const isCustomB = b.id.startsWith('custom_');
+        
+        if (isCustomA && !isCustomB) return 1;
+        if (!isCustomA && isCustomB) return -1;
+        
+        const pageA = typeof a.sourcePage === 'number' ? a.sourcePage : 9999;
+        const pageB = typeof b.sourcePage === 'number' ? b.sourcePage : 9999;
+        if (pageA !== pageB) return pageA - pageB;
+        return a.productName.localeCompare(b.productName);
+      });
+    }
 
     if (filteredHits.length === 0) return [];
 
@@ -139,7 +182,7 @@ export function App() {
       }
     }
     return items;
-  }, [index, catalog, query, activeCategory, activeVariant, activeSize, isEmptyQuery, expandedGroups]);
+  }, [index, catalog, customProducts, query, activeCategory, activeVariant, activeSize, isEmptyQuery, expandedGroups]);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -224,11 +267,15 @@ export function App() {
         updateRow={quotation.updateRow}
         duplicateRow={quotation.duplicateRow}
         removeRow={quotation.removeRow}
-        addBlankRow={quotation.addBlankRow}
         applyGlobalDiscount={quotation.applyGlobalDiscount}
         clearQuotation={quotation.clearQuotation}
         onBackToSearch={() => navigate('search')}
         reorderRows={quotation.reorderRows}
+        onAddCustomProduct={(prod) => {
+          addCustomProduct(prod);
+          quotation.appendProducts([prod]);
+        }}
+        onImageUploaded={handleImageUploaded}
       />
     );
   }
@@ -382,7 +429,7 @@ export function App() {
               />
               <div className="header-text">
                 <h1>Shree Ganesh Hardware</h1>
-                <p className="sub">Quotation Builder</p>
+                <p className="sub">Quotation Builder v1.1</p>
               </div>
             </header>
 
@@ -408,13 +455,28 @@ export function App() {
             />
 
             <div className="scroll-container">
-              {isEmptyQuery ? (
+              {activeCategory === 'recent' ? (
                 <RecentlySelected
                   products={recent.items}
                   isSelected={isSelected}
                   onToggle={handleToggle}
                   imageMap={imageMap}
                 />
+              ) : renderItems.length === 0 ? (
+                <div className="empty">
+                  {activeCategory === 'custom' && !user ? (
+                    <div>
+                      <p>You must be signed in to view and save custom products.</p>
+                      <button onClick={login} style={{ padding: '8px 16px', marginTop: '16px', background: 'var(--accent)', color: '#fff', borderRadius: '6px', border: 'none', cursor: 'pointer' }}>
+                        Sign In with Google
+                      </button>
+                    </div>
+                  ) : activeCategory === 'custom' ? (
+                    "No custom products found. Click '+ Add Custom Product' in the Selected panel!"
+                  ) : (
+                    "No products found."
+                  )}
+                </div>
               ) : isGridView ? (
                 <GridResultsList 
                   items={renderItems}
@@ -454,7 +516,10 @@ export function App() {
           onRemove={quotation.removeRow}
           onNavigateQuotation={handleNavigateQuotation}
           imageMap={imageMap}
-          onAddCustomProduct={(prod) => quotation.appendProducts([prod])}
+          onAddCustomProduct={(prod) => {
+            addCustomProduct(prod);
+            quotation.appendProducts([prod]);
+          }}
           onImageUploaded={handleImageUploaded}
         />
       )}

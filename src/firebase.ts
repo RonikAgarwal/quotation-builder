@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAlVFNR5QRINZ0icfDY-wy9LazCCCdT1uI",
-  authDomain: "sgh-quotation-builder-2025.firebaseapp.com",
+  authDomain: "shreeganeshhardware.web.app",
   projectId: "sgh-quotation-builder-2025",
   storageBucket: "sgh-quotation-builder-2025.firebasestorage.app",
   messagingSenderId: "390780887748",

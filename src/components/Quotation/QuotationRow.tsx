@@ -14,6 +14,7 @@ interface Props {
   onDragEnd?: () => void;
   setDraggable?: (val: boolean) => void;
   isDragTarget?: boolean;
+  onImageClick?: (id: string, name: string) => void;
 }
 
 export function QuotationRow({
@@ -29,6 +30,7 @@ export function QuotationRow({
   onDragEnd,
   setDraggable,
   isDragTarget,
+  onImageClick,
 }: Props) {
   // Helpers for bidirectional math. We round to 2 decimals to avoid float weirdness.
   const round2 = (num: number) => Math.round(num * 100) / 100;
@@ -155,47 +157,6 @@ export function QuotationRow({
     lineTotal = Math.round(item.discountedPrice * item.quantity);
   }
 
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      if (!file.type.startsWith('image/')) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          const MAX = 200;
-          if (width > height) {
-            if (width > MAX) {
-              height *= MAX / width;
-              width = MAX;
-            }
-          } else {
-            if (height > MAX) {
-              width *= MAX / height;
-              height = MAX;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-            onChange(item.id, { customImageBase64: dataUrl });
-          }
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
     <div 
       className={`q-row ${isDragTarget ? 'q-row--drag-target' : ''}`}
@@ -219,7 +180,8 @@ export function QuotationRow({
             onMouseLeave={() => setDraggable && setDraggable(false)}
             onTouchStart={() => setDraggable && setDraggable(true)}
             onTouchEnd={() => setDraggable && setDraggable(false)}
-            title="Drag to reorder"
+            onClick={() => onImageClick?.(item.id, item.name)}
+            title="Click to change image, hold to drag"
           >
             {item.customImageBase64 ? (
               <img 
@@ -239,13 +201,6 @@ export function QuotationRow({
                 + Img
               </div>
             )}
-            <input 
-              type="file" 
-              accept="image/jpeg, image/png, image/webp"
-              onChange={handleImageUpload}
-              title="Click to upload/change image"
-              style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
-            />
           </div>
           <div className="q-product-inputs">
             <input

@@ -35,7 +35,9 @@ export const ProductCard = memo(function ProductCard({ product, selected, active
         aria-label={`Select ${product.displayTitle}`}
       />
       <div className="card__thumbnail">
-        {hasImage ? (
+        {product.customImageBase64 ? (
+          <img src={product.customImageBase64} alt="" style={{ objectFit: 'contain' }} />
+        ) : hasImage ? (
           <img src={`/product-images/${product.familyId}.jpg`} alt="" />
         ) : (
           <div className="card__thumbnail-placeholder" />

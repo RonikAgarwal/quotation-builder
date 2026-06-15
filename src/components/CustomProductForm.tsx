@@ -111,8 +111,11 @@ export function CustomProductForm({ onClose, onSave, onImageUploaded }: Props) {
       salesKey: '',
       searchBlob: '',
       searchText: '',
-      customImageBase64,
     };
+    
+    if (customImageBase64) {
+      p.customImageBase64 = customImageBase64;
+    }
     
     onSave(p);
   };

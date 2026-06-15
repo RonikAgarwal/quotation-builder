@@ -4,6 +4,9 @@ import { QuotationRow } from './QuotationRow';
 import { useCloudHistory } from '../../hooks/useCloudHistory';
 import { usePopup } from '../Popup/PopupProvider';
 import { generatePDF } from '../../utils/pdf';
+import { ImagePickerModal } from '../ImagePickerModal/ImagePickerModal';
+import { CustomProductForm } from '../CustomProductForm';
+import type { Product } from '../../types';
 import './Quotation.css';
 
 interface Props {
@@ -12,11 +15,12 @@ interface Props {
   updateRow: (id: string, updates: Partial<QuotationItem>) => void;
   duplicateRow: (id: string) => void;
   removeRow: (id: string) => void;
-  addBlankRow: () => void;
   applyGlobalDiscount: (pct: number) => void;
   clearQuotation: () => void;
   onBackToSearch: () => void;
   reorderRows: (fromIndex: number, toIndex: number) => void;
+  onAddCustomProduct: (product: Product) => void;
+  onImageUploaded: (familyId: string) => void;
 }
 
 export function QuotationEditor({
@@ -25,16 +29,19 @@ export function QuotationEditor({
   updateRow,
   duplicateRow,
   removeRow,
-  addBlankRow,
   applyGlobalDiscount,
   clearQuotation,
   onBackToSearch,
   reorderRows,
+  onAddCustomProduct,
+  onImageUploaded,
 }: Props) {
   const [globalDisc, setGlobalDisc] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragTargetIndex, setDragTargetIndex] = useState<number | null>(null);
   const [dragEnabled, setDragEnabled] = useState(false);
+  const [activeImagePicker, setActiveImagePicker] = useState<{ id: string; name: string } | null>(null);
+  const [isAddingCustom, setIsAddingCustom] = useState(false);
   const { saveToHistory } = useCloudHistory();
   const { showConfirm } = usePopup();
 
@@ -183,6 +190,7 @@ export function QuotationEditor({
                     setDragTargetIndex(null);
                   }}
                   setDraggable={setDragEnabled}
+                  onImageClick={(id, name) => setActiveImagePicker({ id, name })}
                 />
               );
             })
@@ -190,8 +198,8 @@ export function QuotationEditor({
         </div>
 
         <div className="q-table-footer-actions">
-          <button className="q-btn-blank" onClick={addBlankRow}>
-            + Add Blank Row
+          <button className="q-btn-blank" onClick={() => setIsAddingCustom(true)}>
+            + Add Custom Product
           </button>
           <button 
             className="q-btn-clear" 
@@ -224,6 +232,34 @@ export function QuotationEditor({
           <span>{formatCurrency(grandTotal)}</span>
         </div>
       </div>
+
+      <ImagePickerModal
+        isOpen={!!activeImagePicker}
+        onClose={() => setActiveImagePicker(null)}
+        productName={activeImagePicker?.name || ''}
+        onImageSelected={(base64) => {
+          if (activeImagePicker) {
+            updateRow(activeImagePicker.id, { customImageBase64: base64 });
+          }
+        }}
+      />
+
+      {isAddingCustom && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{ background: 'var(--card)', borderRadius: '12px', width: '90%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <CustomProductForm
+              onClose={() => setIsAddingCustom(false)}
+              onSave={(prod) => {
+                onAddCustomProduct(prod);
+                setIsAddingCustom(false);
+              }}
+              onImageUploaded={onImageUploaded}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

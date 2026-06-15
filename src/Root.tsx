@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { App } from './App';
-import { MobileApp } from './components/Mobile/MobileApp';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Home } from './components/Home/Home';
+import { QuotationBuilder as DesktopBuilder } from './QuotationBuilder';
+import { MobileApp as MobileBuilder } from './components/Mobile/MobileApp';
 
 export function Root() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
@@ -14,9 +16,12 @@ export function Root() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (isMobile) {
-    return <MobileApp />;
-  }
-
-  return <App />;
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/builder" element={isMobile ? <MobileBuilder /> : <DesktopBuilder />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
