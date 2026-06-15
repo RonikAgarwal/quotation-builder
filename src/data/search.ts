@@ -134,7 +134,12 @@ export function rankResults(scores: Map<string, SearchHit>, numTokens: number, l
       const rankB = getCategoryRank(b.product.category);
       if (rankA !== rankB) return rankA - rankB;
 
-      // Tiebreaker 4: alphabetical by name (stable sort)
+      // Tiebreaker 4: shorter product name length (prioritizes exact noun over long descriptions)
+      if (a.product.productName.length !== b.product.productName.length) {
+        return a.product.productName.length - b.product.productName.length;
+      }
+
+      // Tiebreaker 5: alphabetical by name (stable sort)
       return a.product.productName.localeCompare(b.product.productName);
     })
     .slice(0, limit);

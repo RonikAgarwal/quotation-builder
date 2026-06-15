@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Product } from './types';
 import { useCatalog } from './hooks/useCatalog';
 import { useRecent } from './hooks/useRecent';
-import { useQuotation, createItemFromProduct } from './hooks/useQuotation';
+import { useQuotation } from './hooks/useQuotation';
 import { runSearch } from './data/search';
 import { SearchBar } from './components/SearchBar';
 import { FilterPanel } from './components/FilterPanel';
@@ -267,10 +267,6 @@ export function App() {
               <button className="menu-overlay__item" onClick={() => { setView('pdf'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">📄</span>
                 View Original Catalog
-              </button>
-              <button className="menu-overlay__item" onClick={() => { setView('images'); setSidebarOpen(false); }}>
-                <span className="menu-overlay__icon">🖼️</span>
-                Manage Images
               </button>
               <button className="menu-overlay__item" onClick={() => { setView('history'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">🕒</span>
