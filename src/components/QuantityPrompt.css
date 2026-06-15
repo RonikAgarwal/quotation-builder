@@ -1,0 +1,93 @@
+.qty-prompt-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+.qty-prompt-modal {
+  background: var(--card);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 320px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.2s ease;
+}
+
+.qty-prompt-modal h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.qty-prompt-name {
+  margin: 0 0 4px 0;
+  font-weight: 500;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.qty-prompt-sub {
+  margin: 0 0 16px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.qty-prompt-input-group {
+  margin-bottom: 20px;
+}
+
+.qty-prompt-input-group input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  text-align: center;
+}
+
+.qty-prompt-input-group input:focus {
+  border-color: var(--accent);
+}
+
+.qty-prompt-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.qty-prompt-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: var(--muted);
+}
+.btn-cancel:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.btn-confirm {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-confirm:hover {
+  opacity: 0.9;
+}
