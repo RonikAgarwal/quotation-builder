@@ -46,6 +46,7 @@ export interface Product {
   // pressure, sizeKey, variantKey, pressureKey). Used by the exact token
   // matching stage. Never displayed.
   searchText: string;
+  customImageBase64?: string; // Encoded image data for custom products
 }
 
 // ---------------------------------------------------------------------------
@@ -62,6 +63,7 @@ export interface QuotationItem {
   discountPercent: number | ''; 
   discountedPrice: number | '';
   quantity: number | '';
+  customImageBase64?: string; // Encoded image data for custom products
 }
 
 export interface QuotationState {

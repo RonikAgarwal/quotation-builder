@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { QuotationState, QuotationItem } from '../../types';
 import { QuotationRow } from './QuotationRow';
+import { useCloudHistory } from '../../hooks/useCloudHistory';
+import { usePopup } from '../Popup/PopupProvider';
 import { generatePDF } from '../../utils/pdf';
 import './Quotation.css';
 
@@ -28,6 +30,8 @@ export function QuotationEditor({
   onBackToSearch,
 }: Props) {
   const [globalDisc, setGlobalDisc] = useState('');
+  const { saveToHistory } = useCloudHistory();
+  const { showConfirm } = usePopup();
 
   // Summaries
   let totalMrp = 0;
@@ -63,6 +67,10 @@ export function QuotationEditor({
     generatePDF(state, grandTotal);
   };
 
+  const handleSaveCloud = () => {
+    saveToHistory(state, grandTotal);
+  };
+
   return (
     <div className="quotation-screen">
       <header className="q-topbar">
@@ -73,9 +81,14 @@ export function QuotationEditor({
           <img src="/logo.png" alt="Logo" className="brand-logo-small" />
           <h2>Quotation Editor</h2>
         </div>
-        <button className="q-btn-pdf" onClick={handleGeneratePdf}>
-          Download PDF
-        </button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button className="q-btn-save-cloud" onClick={handleSaveCloud} style={{ background: 'white', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>
+            ☁ Save to Cloud
+          </button>
+          <button className="q-btn-pdf" onClick={handleGeneratePdf}>
+            Download PDF
+          </button>
+        </div>
       </header>
 
       <div className="q-headercard">
@@ -150,9 +163,9 @@ export function QuotationEditor({
           <button 
             className="q-btn-clear" 
             onClick={() => {
-              if (window.confirm('Are you sure you want to clear all items from this quotation?')) {
+              showConfirm('Are you sure you want to clear all items from this quotation?', () => {
                 clearQuotation();
-              }
+              }, 'Clear Quotation');
             }}
           >
             Clear All Items

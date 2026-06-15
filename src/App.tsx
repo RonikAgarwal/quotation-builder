@@ -13,14 +13,17 @@ import { SelectedPanel } from './components/SelectedPanel';
 import { QuotationEditor } from './components/Quotation/QuotationEditor';
 import { ImageManager } from './components/ImageManager/ImageManager';
 import { QuantityPrompt } from './components/QuantityPrompt';
+import { HistoryView } from './components/HistoryView/HistoryView';
+import { useAuth } from './hooks/useAuth';
 import type { RenderItem } from './types';
 
 export function App() {
   const { status, catalog, index, error } = useCatalog();
   const recent = useRecent();
   const quotation = useQuotation();
+  const { user, login, logout } = useAuth();
 
-  const [view, setView] = useState<'search' | 'quotation' | 'images' | 'pdf'>('search');
+  const [view, setView] = useState<'search' | 'quotation' | 'images' | 'pdf' | 'history'>('search');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isGridView, setIsGridView] = useState(true);
   const [query, setQuery] = useState('');
@@ -269,13 +272,41 @@ export function App() {
                 <span className="menu-overlay__icon">🖼️</span>
                 Manage Images
               </button>
+              <button className="menu-overlay__item" onClick={() => { setView('history'); setSidebarOpen(false); }}>
+                <span className="menu-overlay__icon">🕒</span>
+                Previous Quotations
+              </button>
+              
+              <div style={{ marginTop: 'auto', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                {user ? (
+                  <div style={{ padding: '0 16px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>Signed in as</div>
+                    <div style={{ fontWeight: 500, marginBottom: '16px', wordBreak: 'break-all' }}>{user.email}</div>
+                    <button className="menu-overlay__item" onClick={() => { logout(); setSidebarOpen(false); }} style={{ color: '#d32f2f' }}>
+                      <span className="menu-overlay__icon">🚪</span> Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <button className="menu-overlay__item" onClick={() => { login(); setSidebarOpen(false); }} style={{ color: 'var(--accent)' }}>
+                    <span className="menu-overlay__icon">🔑</span> Sign In with Google
+                  </button>
+                )}
+              </div>
             </nav>
           </aside>
         </>
       )}
 
       <main className="main">
-        {view === 'pdf' ? (
+        {view === 'history' ? (
+          <HistoryView
+            onBack={() => setView('search')}
+            onEdit={(state) => {
+              quotation.loadQuotation(state);
+              setView('quotation');
+            }}
+          />
+        ) : view === 'pdf' ? (
           <>
             <header className="header" style={{ marginBottom: '8px' }}>
               <button 

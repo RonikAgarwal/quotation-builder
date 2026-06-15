@@ -1,5 +1,6 @@
 import { useCloudHistory, CloudQuotation } from '../../hooks/useCloudHistory';
 import { generatePDF } from '../../utils/pdf';
+import { usePopup } from '../Popup/PopupProvider';
 import './HistoryView.css';
 
 interface Props {
@@ -9,13 +10,14 @@ interface Props {
 
 export function HistoryView({ onEdit, onBack }: Props) {
   const { history, loading, deleteHistory, refresh } = useCloudHistory();
+  const { showAlert } = usePopup();
 
   const handleDownload = async (entry: CloudQuotation) => {
     try {
       await generatePDF(entry.state, entry.totalAmount);
     } catch (err) {
       console.error(err);
-      alert("Failed to generate PDF.");
+      showAlert("Failed to generate PDF.", "error", "PDF Error");
     }
   };
 

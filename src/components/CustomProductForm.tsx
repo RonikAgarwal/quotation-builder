@@ -14,28 +14,56 @@ export function CustomProductForm({ onClose, onSave, onImageUploaded }: Props) {
   
   const [dragActive, setDragActive] = useState(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [customImageBase64, setCustomImageBase64] = useState<string | undefined>(undefined);
   
-  // We generate a unique familyId for this custom product immediately
-  // so we can upload an image for it before saving.
   const [customFamilyId] = useState(() => `custom_${Date.now()}_${Math.floor(Math.random() * 1000)}`);
 
   async function uploadFile(file: File) {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
     try {
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
-        headers: {
-          'x-family-id': customFamilyId
-        },
-        body: file
-      });
-      if (response.ok) {
-        onImageUploaded(customFamilyId);
-        setUploadedImageUrl(URL.createObjectURL(file));
-      } else {
-        alert('Upload failed');
-      }
+      // Local Base64 resizing
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Max dimensions 200x200
+          const MAX = 200;
+          if (width > height) {
+            if (width > MAX) {
+              height *= MAX / width;
+              width = MAX;
+            }
+          } else {
+            if (height > MAX) {
+              width *= MAX / height;
+              height = MAX;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7); // compress to 70% quality
+            setCustomImageBase64(dataUrl);
+            setUploadedImageUrl(dataUrl); // Show preview
+            onImageUploaded(customFamilyId); // Tell app an image exists for this ID
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
     } catch (e) {
-      alert('Upload failed');
+      alert('Failed to process image');
     }
   }
 
@@ -82,7 +110,8 @@ export function CustomProductForm({ onClose, onSave, onImageUploaded }: Props) {
       pressureKey: '',
       salesKey: '',
       searchBlob: '',
-      searchText: ''
+      searchText: '',
+      customImageBase64,
     };
     
     onSave(p);

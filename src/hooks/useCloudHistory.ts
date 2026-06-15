@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase';
-import { collection, query, where, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import type { QuotationState } from '../types';
 import { useAuth } from './useAuth';
+import { usePopup } from '../components/Popup/PopupProvider';
 
 export interface CloudQuotation {
   id: string;
@@ -16,6 +17,7 @@ export interface CloudQuotation {
 
 export function useCloudHistory() {
   const { user } = useAuth();
+  const { showAlert, showConfirm } = usePopup();
   const [history, setHistory] = useState<CloudQuotation[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -28,14 +30,15 @@ export function useCloudHistory() {
     try {
       const q = query(
         collection(db, 'quotations'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('userId', '==', user.uid)
       );
       const querySnapshot = await getDocs(q);
       const items: CloudQuotation[] = [];
       querySnapshot.forEach((doc) => {
         items.push({ id: doc.id, ...doc.data() } as CloudQuotation);
       });
+      // Sort in memory to avoid needing a Firestore composite index
+      items.sort((a, b) => b.createdAt - a.createdAt);
       setHistory(items);
     } catch (err) {
       console.error("Failed to fetch history:", err);
@@ -50,7 +53,7 @@ export function useCloudHistory() {
 
   const saveToHistory = async (state: QuotationState, totalAmount: number) => {
     if (!user) {
-      alert("You must be logged in to save quotations to the cloud.");
+      showAlert("You must be logged in to save quotations to the cloud.", "error", "Sign In Required");
       return;
     }
     const newEntry = {
@@ -65,25 +68,25 @@ export function useCloudHistory() {
     try {
       const docRef = await addDoc(collection(db, 'quotations'), newEntry);
       setHistory(prev => [{ id: docRef.id, ...newEntry }, ...prev]);
-      alert("Quotation saved to cloud history successfully!");
+      showAlert("Quotation saved to cloud history successfully!", "success", "Success");
     } catch (err) {
       console.error("Failed to save to history:", err);
-      alert("Failed to save quotation. Check console.");
+      showAlert("Failed to save quotation. Check console.", "error", "Error");
     }
   };
 
-  const deleteHistory = async (id: string) => {
+  const deleteHistory = (id: string) => {
     if (!user) return;
-    const confirmDelete = window.confirm("Are you sure you want to delete this quotation from your history?");
-    if (!confirmDelete) return;
-
-    try {
-      await deleteDoc(doc(db, 'quotations', id));
-      setHistory(prev => prev.filter(item => item.id !== id));
-    } catch (err) {
-      console.error("Failed to delete history:", err);
-      alert("Failed to delete. Check console.");
-    }
+    
+    showConfirm("Are you sure you want to delete this quotation from your history?", async () => {
+      try {
+        await deleteDoc(doc(db, 'quotations', id));
+        setHistory(prev => prev.filter(item => item.id !== id));
+      } catch (err) {
+        console.error("Failed to delete history:", err);
+        showAlert("Failed to delete. Check console.", "error", "Error");
+      }
+    }, "Delete Quotation");
   };
 
   return { history, loading, saveToHistory, deleteHistory, refresh: fetchHistory };
