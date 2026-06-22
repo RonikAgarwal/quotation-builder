@@ -3,7 +3,10 @@ import type { QuotationState, QuotationItem } from '../../types';
 import { QuotationRow } from './QuotationRow';
 import { useCloudHistory } from '../../hooks/useCloudHistory';
 import { usePopup } from '../Popup/PopupProvider';
+import { useAuth } from '../../hooks/useAuth';
 import { generatePDF } from '../../utils/pdf';
+import { db } from '../../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 import { ImagePickerModal } from '../ImagePickerModal/ImagePickerModal';
 import { CustomProductForm } from '../CustomProductForm';
 import type { Product } from '../../types';
@@ -42,8 +45,12 @@ export function QuotationEditor({
   const [dragEnabled, setDragEnabled] = useState(false);
   const [activeImagePicker, setActiveImagePicker] = useState<{ id: string; name: string } | null>(null);
   const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [showWhatsappModal, setShowWhatsappModal] = useState(false);
+  const [whatsappPhone, setWhatsappPhone] = useState('9864548325');
+  const [isSendingLink, setIsSendingLink] = useState(false);
   const { saveToHistory } = useCloudHistory();
-  const { showConfirm } = usePopup();
+  const { showConfirm, showAlert } = usePopup();
+  const { user } = useAuth();
 
   // Summaries
   let totalMrp = 0;
@@ -83,6 +90,31 @@ export function QuotationEditor({
     saveToHistory(state, grandTotal);
   };
 
+  const handleSendWhatsappLink = async () => {
+    if (!whatsappPhone) return;
+    setIsSendingLink(true);
+    try {
+      const docRef = await addDoc(collection(db, 'shared_quotations'), {
+        state: state,
+        grandTotal: grandTotal,
+        createdAt: Date.now()
+      });
+      
+      const downloadUrl = `https://shreeganeshhardware.web.app/share/${docRef.id}`;
+      const party = state.partyName || 'Customer';
+      const text = `Click on the link to download the Quotation for ${party}.\n\n${downloadUrl}`;
+      const encodedText = encodeURIComponent(text);
+      
+      window.open(`https://wa.me/91${whatsappPhone}?text=${encodedText}`, '_blank');
+      setShowWhatsappModal(false);
+    } catch (e) {
+      console.error('Failed to send link', e);
+      alert('Failed to generate sharing link. Please try again.');
+    } finally {
+      setIsSendingLink(false);
+    }
+  };
+
   return (
     <div className="quotation-screen">
       <header className="q-topbar">
@@ -90,12 +122,24 @@ export function QuotationEditor({
           ← Back to Search
         </button>
         <div className="q-topbar-brand">
-          <img src="/logo.png" alt="Logo" className="brand-logo-small" />
+          <img src="/logo.webp" alt="Logo" className="brand-logo-small" />
           <h2>Quotation Editor</h2>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className="q-btn-save-cloud" onClick={handleSaveCloud} style={{ background: 'white', color: 'var(--accent)', border: '1px solid var(--accent)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 500 }}>
             ☁ Save to Cloud
+          </button>
+          <button className="q-btn-pdf" onClick={() => {
+            if (!user) {
+              showAlert("You must be logged in to generate a sharing link.", "error", "Sign In Required");
+            } else {
+              setShowWhatsappModal(true);
+            }
+          }} style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c-.003 1.396.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c.003-3.625 2.952-6.57 6.577-6.57a6.59 6.59 0 0 1 4.646 1.932 6.59 6.59 0 0 1 1.928 4.643c-.004 3.625-2.95 6.57-6.575 6.57zm3.605-4.92c-.197-.099-1.17-.578-1.352-.643-.182-.065-.315-.099-.448.099-.133.197-.513.643-.627.775-.114.133-.23.149-.427.049-.197-.099-.836-.308-1.592-.985-.59-.525-.985-1.175-1.1-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.448-1.082-.613-1.482-.16-.385-.323-.333-.448-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.53.247c-.182.198-.695.678-.695 1.654s.712 1.916.81 2.049c.098.133 1.394 2.132 3.376 2.987.472.203.84.324 1.126.415.474.15 905.129 1.3.116 1.776-.013.476-.247 1.482-.87 1.632-1.413.15-.544.17-.803.065-1.102z"/>
+            </svg>
+            Send Link
           </button>
           <button className="q-btn-pdf" onClick={handleGeneratePdf}>
             Download PDF
@@ -257,6 +301,45 @@ export function QuotationEditor({
               }}
               onImageUploaded={onImageUploaded}
             />
+          </div>
+        </div>
+      )}
+
+      {showWhatsappModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{ background: 'var(--card)', borderRadius: '12px', width: '90%', maxWidth: '360px', padding: '24px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '16px', color: 'var(--text)' }}>Send via WhatsApp</h3>
+            <div className="q-field">
+              <label>WhatsApp Number</label>
+              <input 
+                type="text" 
+                value={whatsappPhone} 
+                onChange={e => setWhatsappPhone(e.target.value)}
+                placeholder="e.g. 9864548325"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendWhatsappLink();
+                  }
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+              <button 
+                onClick={() => setShowWhatsappModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontWeight: 500 }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSendWhatsappLink}
+                disabled={isSendingLink}
+                style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', opacity: isSendingLink ? 0.7 : 1 }}
+              >
+                {isSendingLink ? 'Generating...' : 'Send'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,59 +1,75 @@
 # Hardware Quotation Builder
 
-A powerful, completely client-side quotation generation tool built for hardware stores and suppliers. It allows users to quickly select products, edit prices/quantities on the fly, search the web for missing product images, and export the final quotation directly to a professional PDF.
+A fast, client-side quotation generation tool tailored for hardware stores. It enables instant product search, offline-capable quotation editing, and on-device PDF generation. Integrated with Firebase for cloud synchronization and authentication.
 
-## 🚀 Key Features
+## Features
 
-### 1. **Dynamic Catalog & Product Selection**
-- Complete product catalog loaded directly in the browser.
-- Left-side category and brand filters with a beautiful grid layout for hardware items.
-- "Recently Selected" floating panel lets you quickly see and un-select items you just tapped.
+- **Dynamic Product Catalog**: Search and filter an extensive hardware catalog directly in the browser. Fuzzy search is handled client-side for immediate feedback.
+- **Interactive Quotation Editor**: Real-time total and price calculations. Add custom discounts and manual MRP overrides on a per-item basis.
+- **Cloud Sync & History**: Securely save quotations to the cloud and access previous quotations from any device.
+- **Custom Products**: Add unlisted items with custom images. Data is persisted to Firebase Firestore under your authenticated account.
+- **On-Device PDF Generation**: Export professional, paginated, and branded PDFs locally without a backend service. Smart layout engine hides image columns if no images are present to maximize text space.
+- **Cross-Platform & Mobile Optimized**: Dedicated mobile views, bottom sheet cart drawer, and responsive gestures. Includes a built-in Original Catalog PDF Viewer with Android fallback support.
+- **Local Image Handling**: Upload local images for products. They are securely converted to Base64 to bypass CORS constraints during PDF generation.
 
-### 2. **Interactive Quotation Editor**
-- Every row is fully editable: Quantity, Price, Total, MRP, and Discount %.
-- **Smart Math:**
-  - Type `Quantity` and `Price` -> auto-calculates `Total`.
-  - Type `Quantity` and `Total` -> auto-calculates `Price`.
-  - Discount is completely disconnected so you can adjust the base MRP up or down without breaking your final prices.
+## Tech Stack
 
-### 3. **Local Image Uploads**
-- Missing an image for a custom product? Click `+ Img` to open the Image Manager.
-- Choose to upload a local file from your device.
-- Images are automatically converted to Base64 to bypass browser security blocks (CORS) when generating PDFs.
+**Core**
+- React 18
+- TypeScript
+- Vite
 
-### 4. **PDF Generation**
-- Click "Download PDF" to instantly generate a branded, paginated PDF.
-- If a quotation has zero images across all rows, the PDF engine is smart enough to completely remove the Image column so your text has more room to breathe.
-- Page numbering is fully supported, and manual products are hidden from the "Page No." column.
+**State & Infrastructure**
+- Firebase Auth (Google Sign-In)
+- Firebase Firestore (NoSQL Cloud Database)
+- Firebase Hosting
+- Fuse.js (Client-side fuzzy search)
 
-### 5. **Mobile & Tablet Optimized**
-- **Mobile Mode:** Automatically detects mobile phones and provides a simplified, read-only "History" view that requires a PIN/Password to access.
-- **Desktop/Tablet Mode:** The full editor is responsive and optimized for wide screens.
+**PDF & Export**
+- html2canvas & jspdf (Client-side rendering)
 
-## 💻 Tech Stack & Usage
+**UI & Styling**
+- Lucide React (Icons)
+- CSS Modules (Custom utility classes, CSS Variables, Glassmorphism design system)
 
-- **Framework:** React 18 with TypeScript and Vite.
-- **Styling:** CSS Modules with modern Glassmorphism UI tokens.
-- **PDF Engine:** `html2canvas` + `jspdf` for pixel-perfect document rendering directly in the user's browser.
-- **External APIs:** None! 100% Client-side.
+## Development Setup
 
-### Local Development
-
-1. Clone the repo and install dependencies:
+1. **Clone & Install**
    ```bash
+   git clone <repo-url>
+   cd quotation-builder
    npm install
    ```
-2. Start the dev server:
+
+2. **Environment Configuration**
+   Create a `.env.local` file with your Firebase configuration:
+   ```env
+   VITE_FIREBASE_API_KEY="your-api-key"
+   VITE_FIREBASE_AUTH_DOMAIN="your-auth-domain"
+   VITE_FIREBASE_PROJECT_ID="your-project-id"
+   VITE_FIREBASE_STORAGE_BUCKET="your-storage-bucket"
+   VITE_FIREBASE_MESSAGING_SENDER_ID="your-sender-id"
+   VITE_FIREBASE_APP_ID="your-app-id"
+   ```
+
+3. **Start Development Server**
    ```bash
    npm run dev
    ```
 
-### Deployment
+## Deployment
 
-This project is built to be hosted entirely as static files. It is currently deployed via **Firebase Hosting**.
+This application is built as a static Single Page Application (SPA) and is configured to be deployed via Firebase Hosting.
 
-To build and deploy:
-```bash
-npm run build
-npx firebase-tools deploy --only hosting
-```
+1. Build the production bundle:
+   ```bash
+   npm run build
+   ```
+
+2. Deploy to Firebase:
+   ```bash
+   npx firebase-tools deploy
+   ```
+
+---
+*Developed for internal business use.*

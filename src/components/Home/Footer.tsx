@@ -6,7 +6,7 @@ export function Footer() {
       <div className="home-container">
         <div className="home-footer__grid">
           <div className="home-footer__brand">
-            <img src="/logo.png" alt="Shree Ganesh Hardware" className="home-footer__logo" />
+            <img src="/logo.webp" alt="Shree Ganesh Hardware" className="home-footer__logo" />
             <p className="home-footer__desc">
               Your trusted partner for premium hardware, plumbing, paints, and sanitaryware solutions.
             </p>

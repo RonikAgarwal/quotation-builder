@@ -1,5 +1,4 @@
-
-import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { PaintBucket, Droplets, Box, Wrench, Bath, CheckSquare } from 'lucide-react';
 
 const categories = [
@@ -21,25 +20,20 @@ export function Categories() {
         </div>
 
         <div className="home-categories__grid">
-          {categories.map((cat, i) => {
+          {categories.map((cat) => {
             const Icon = cat.icon;
             return (
-              <motion.div 
+              <div 
                 key={cat.id}
                 className="home-category__card"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                whileHover={{ y: -6 }}
               >
                 <div className="home-category__icon">
                   <Icon size={28} />
                 </div>
                 <h3 className="home-category__name">{cat.name}</h3>
                 <p className="home-category__description">{cat.desc}</p>
-                <a href="/builder" className="home-category__link">Explore →</a>
-              </motion.div>
+                <Link to="/builder" className="home-category__link">Explore →</Link>
+              </div>
             );
           })}
         </div>

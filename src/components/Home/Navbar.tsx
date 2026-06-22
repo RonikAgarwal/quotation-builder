@@ -26,7 +26,7 @@ export function Navbar({ onNavigate }: { onNavigate: () => void }) {
     <nav className={`home-navbar ${scrolled ? 'home-navbar--scrolled' : ''}`}>
       <div className="home-navbar__container">
         <div className="home-navbar__logo-group">
-          <img src="/logo.png" alt="Shree Ganesh Hardware" className="home-navbar__logo" />
+          <img src="/logo.webp" alt="Shree Ganesh Hardware" className="home-navbar__logo" />
           <span className="home-navbar__title">Shree Ganesh Hardware</span>
         </div>
 

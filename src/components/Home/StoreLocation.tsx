@@ -92,15 +92,15 @@ export function StoreLocation() {
         <div className="home-gallery">
           <div className="home-gallery__item">
             {/* Replace with your actual shop image */}
-            <img src="/homepage-assets/shop-1.jpg" alt="Shop exterior" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&q=80&w=400"; }} />
+            <img src="/homepage-assets/shop-1.webp" alt="Shop exterior" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&q=80&w=400"; }} />
           </div>
           <div className="home-gallery__item">
             {/* Replace with your actual shop image */}
-            <img src="/homepage-assets/shop-2.jpg" alt="Hardware section" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1505798577917-a65157d3320a?auto=format&fit=crop&q=80&w=400"; }} />
+            <img src="/homepage-assets/shop-2.webp" alt="Hardware section" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1505798577917-a65157d3320a?auto=format&fit=crop&q=80&w=400"; }} />
           </div>
           <div className="home-gallery__item">
             {/* Replace with your actual shop image */}
-            <img src="/homepage-assets/shop-3.jpg" alt="Paints section" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&q=80&w=400"; }} />
+            <img src="/homepage-assets/shop-3.webp" alt="Paints section" onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?auto=format&fit=crop&q=80&w=400"; }} />
           </div>
         </div>
       </div>

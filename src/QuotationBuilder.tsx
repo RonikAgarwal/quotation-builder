@@ -11,6 +11,8 @@ import { GridResultsList } from './components/GridResultsList';
 import { RecentlySelected } from './components/RecentlySelected';
 import { SelectedPanel } from './components/SelectedPanel';
 import { QuotationEditor } from './components/Quotation/QuotationEditor';
+import { MobileQuotationEditor } from './components/Quotation/MobileQuotationEditor';
+import { CustomProductForm } from './components/CustomProductForm';
 import { ImageManager } from './components/ImageManager/ImageManager';
 import { QuantityPrompt } from './components/QuantityPrompt';
 import { HistoryView } from './components/HistoryView/HistoryView';
@@ -19,6 +21,9 @@ import { useCustomProducts } from './hooks/useCustomProducts';
 import type { RenderItem } from './types';
 
 import { useRouting } from './hooks/useRouting';
+import { useIsMobile } from './hooks/useIsMobile';
+import { MobileBuilderHeader } from './components/MobileBuilderHeader';
+import { MobileCartPopup } from './components/MobileCartPopup';
 
 export function QuotationBuilder() {
   const { status, catalog, index, error } = useCatalog();
@@ -30,6 +35,7 @@ export function QuotationBuilder() {
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isGridView, setIsGridView] = useState(true);
+  const [isAddingCustomFromCart, setIsAddingCustomFromCart] = useState(false);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>('all');
   const [activeVariant, setActiveVariant] = useState<string | null>(null);
@@ -39,6 +45,9 @@ export function QuotationBuilder() {
   const [imageMap, setImageMap] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [promptProduct, setPromptProduct] = useState<Product | null>(null);
+  
+  const isMobile = useIsMobile();
+  const [isCartPopupOpen, setCartPopupOpen] = useState(false);
 
   useEffect(() => {
     fetch('/image-map.json')
@@ -83,7 +92,7 @@ export function QuotationBuilder() {
       }
     }
     return Array.from(variants).sort((a, b) => a.localeCompare(b));
-  }, [catalog, activeCategory]);
+  }, [catalog, activeCategory, customProducts]);
 
   const availableSizes = useMemo(() => {
     if (!catalog) return [];
@@ -105,7 +114,7 @@ export function QuotationBuilder() {
     }
     // Simple natural sort for sizes like "1 Inch", "2 Inch", "1/2 Inch"
     return Array.from(sizes).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  }, [catalog, activeCategory, activeVariant]);
+  }, [catalog, activeCategory, activeVariant, customProducts]);
 
   const renderItems = useMemo<RenderItem[]>(() => {
     if (!index || !catalog || activeCategory === 'recent') return [];
@@ -260,8 +269,9 @@ export function QuotationBuilder() {
   }
 
   if (view === 'quotation') {
+    const EditorComponent = isMobile ? MobileQuotationEditor : QuotationEditor;
     return (
-      <QuotationEditor
+      <EditorComponent
         state={quotation.state}
         updateHeader={quotation.updateHeader}
         updateRow={quotation.updateRow}
@@ -309,6 +319,12 @@ export function QuotationBuilder() {
               </button>
             </div>
             <nav className="menu-overlay__nav">
+              {!isMobile && (
+                <button className="menu-overlay__item" onClick={() => { window.location.href = '/'; }}>
+                  <span className="menu-overlay__icon">🏠</span>
+                  Home
+                </button>
+              )}
               <button className="menu-overlay__item" onClick={() => { navigate('search'); setSidebarOpen(false); }}>
                 <span className="menu-overlay__icon">🔍</span>
                 Search Products
@@ -356,6 +372,50 @@ export function QuotationBuilder() {
         </>
       )}
 
+      {isAddingCustomFromCart && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000
+        }}>
+          <div style={{ background: 'var(--card)', borderRadius: '12px', width: '90%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
+            <CustomProductForm
+              onClose={() => setIsAddingCustomFromCart(false)}
+              onSave={(prod: Product) => {
+                addCustomProduct(prod);
+                quotation.appendProducts([prod]);
+                setIsAddingCustomFromCart(false);
+              }}
+              onImageUploaded={handleImageUploaded}
+            />
+          </div>
+        </div>
+      )}
+
+      {promptProduct && (
+        <QuantityPrompt
+          product={promptProduct}
+          onCancel={() => setPromptProduct(null)}
+          onConfirm={(prod: Product, qty: number) => {
+            quotation.appendProduct(prod, qty);
+            setPromptProduct(null);
+          }}
+        />
+      )}
+
+      {isMobile && (
+        <MobileCartPopup
+          isOpen={isCartPopupOpen}
+          onClose={() => setCartPopupOpen(false)}
+          items={quotation.state.items}
+          imageMap={imageMap}
+          onUpdateQuantity={(id, qty) => quotation.updateRow(id, { quantity: qty })}
+          onUpdateMRP={(id, mrp) => quotation.updateRow(id, { mrp })}
+          onRemove={quotation.removeRow}
+          onAddCustomProduct={() => setIsAddingCustomFromCart(true)}
+          onCheckout={() => { setCartPopupOpen(false); navigate('quotation'); }}
+        />
+      )}
+
+
       <main className="main">
         {view === 'history' ? (
           <HistoryView
@@ -376,16 +436,27 @@ export function QuotationBuilder() {
                 ☰
               </button>
               <img 
-                src="/logo.png" 
+                src="/logo.webp" 
                 alt="Shree Ganesh Hardware Logo" 
                 className="brand-logo" 
                 onClick={() => navigate('search')}
                 style={{ cursor: 'pointer' }}
               />
-              <div className="header-text">
+              <div className="header-text" style={{ flex: 1 }}>
                 <h1>Original Catalog</h1>
                 <p className="sub">Browse the full product catalog</p>
               </div>
+              {isMobile && (
+                <button 
+                  className="mobile-b-header__cart-btn" 
+                  onClick={() => setCartPopupOpen(true)} 
+                  aria-label="Cart"
+                  style={{ background: 'none', border: 'none', position: 'relative', cursor: 'pointer', padding: '8px', color: 'var(--text)' }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                  {quotation.state.items.length > 0 && <span className="mobile-b-header__cart-badge">{quotation.state.items.length}</span>}
+                </button>
+              )}
             </header>
             <div className="pdf-category-bar">
               {catalogPages.map((c) => (
@@ -398,18 +469,89 @@ export function QuotationBuilder() {
                 </button>
               ))}
             </div>
-            <div style={{ width: '100%', flex: 1, background: '#f5f5f5', borderRadius: '12px', overflow: 'hidden', minHeight: 'calc(100vh - 140px)' }}>
+            <div className="pdf-container" style={{ width: '100%', flex: 1, background: '#f5f5f5', borderRadius: '12px', overflowY: 'auto', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '8px', textAlign: 'center', background: '#e0f2fe', color: '#0369a1', fontSize: '14px', display: 'none' }} className="android-pdf-fallback">
+                If the PDF doesn't load on your Android device, you can <a href="/catalog.pdf" target="_blank" rel="noopener noreferrer" style={{ fontWeight: 'bold', textDecoration: 'underline', color: '#0284c7' }}>Download / View it here</a>.
+              </div>
+              <style>{`
+                @supports (-webkit-touch-callout: none) {
+                  /* iOS Safari - usually supports inline PDF */
+                }
+                @media (pointer: coarse) {
+                  /* Mobile devices, show fallback in case of Android */
+                  .android-pdf-fallback { display: block !important; }
+                }
+              `}</style>
               <iframe
                 key={pdfPage}
                 src={`/catalog.pdf#page=${pdfPage}`}
                 width="100%"
                 height="100%"
-                style={{ border: 'none', display: 'block' }}
+                style={{ border: 'none', display: 'block', flex: 1 }}
                 title="Product Catalog PDF"
               />
             </div>
           </>
 
+        ) : isMobile ? (
+          <>
+            <MobileBuilderHeader
+              onToggleSidebar={() => setSidebarOpen(true)}
+              query={query}
+              onQueryChange={setQuery}
+              cartCount={quotation.state.items.length}
+              onOpenCart={() => setCartPopupOpen(true)}
+              categories={catalog?.categories ?? []}
+              activeCategory={activeCategory}
+              onChangeCategory={handleCategoryChange}
+              sizes={availableSizes}
+              activeSize={activeSize}
+              onChangeSize={setActiveSize}
+              isGridView={isGridView}
+              onToggleView={() => setIsGridView(v => !v)}
+            />
+
+
+
+            <div className="scroll-container">
+              {activeCategory === 'recent' ? (
+                <RecentlySelected
+                  products={recent.items}
+                  isSelected={isSelected}
+                  onToggle={handleToggle}
+                  imageMap={imageMap}
+                />
+              ) : renderItems.length === 0 ? (
+                <div className="empty">
+                  {activeCategory === 'custom' && !user ? (
+                    <div>
+                      <p style={{ marginBottom: '16px' }}>Sign in to manage custom products.</p>
+                      <button className="cta" onClick={login}>Sign In with Google</button>
+                    </div>
+                  ) : (
+                    "No products found."
+                  )}
+                </div>
+              ) : isGridView ? (
+                <GridResultsList
+                  items={renderItems}
+                  isSelected={isSelected}
+                  onToggle={handleToggle}
+                  imageMap={imageMap}
+                />
+              ) : (
+                <ResultsList
+                  items={renderItems}
+                  isSelected={isSelected}
+                  onToggle={handleToggle}
+                  expandedGroups={expandedGroups}
+                  onToggleGroup={toggleGroup}
+                  activeIndex={activeIndex}
+                  imageMap={imageMap}
+                />
+              )}
+            </div>
+          </>
         ) : (
           <>
             <header className="header">
@@ -421,7 +563,7 @@ export function QuotationBuilder() {
                 ☰
               </button>
               <img 
-                src="/logo.png" 
+                src="/logo.webp" 
                 alt="Shree Ganesh Hardware Logo" 
                 className="brand-logo" 
                 onClick={() => navigate('search')}
@@ -433,12 +575,14 @@ export function QuotationBuilder() {
               </div>
             </header>
 
-            <SearchBar
-              ref={searchRef}
-              value={query}
-              onChange={setQuery}
-              onKeyDown={handleKeyDown}
-            />
+            <div className="sticky-search">
+              <SearchBar
+                ref={searchRef}
+                value={query}
+                onChange={setQuery}
+                onKeyDown={handleKeyDown}
+              />
+            </div>
 
             <FilterPanel
               categories={catalog?.categories ?? []}
@@ -507,21 +651,22 @@ export function QuotationBuilder() {
         )}
       </main>
 
-
-
-      {(view === 'search' || view === 'pdf') && (
-        <SelectedPanel
-          items={quotation.state.items}
-          count={quotation.state.items.length}
-          onRemove={quotation.removeRow}
-          onNavigateQuotation={handleNavigateQuotation}
-          imageMap={imageMap}
-          onAddCustomProduct={(prod) => {
-            addCustomProduct(prod);
-            quotation.appendProducts([prod]);
-          }}
-          onImageUploaded={handleImageUploaded}
-        />
+      {/* Split view on desktop, entirely different views on mobile */}
+      {!isMobile && (view === 'search' || view === 'pdf') && (
+        <aside className="side">
+          <SelectedPanel
+            items={quotation.state.items}
+            count={quotation.state.items.length}
+            onRemove={quotation.removeRow}
+            onNavigateQuotation={handleNavigateQuotation}
+            imageMap={imageMap}
+            onAddCustomProduct={(prod) => {
+              addCustomProduct(prod);
+              quotation.appendProducts([prod]);
+            }}
+            onImageUploaded={handleImageUploaded}
+          />
+        </aside>
       )}
 
       {promptProduct && (

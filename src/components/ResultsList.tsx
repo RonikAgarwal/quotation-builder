@@ -1,5 +1,7 @@
 import type { Product, RenderItem } from '../types';
 import { ProductCard } from './ProductCard';
+import { FamilyListCard } from './FamilyListCard';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Props {
   items: RenderItem[];
@@ -12,6 +14,8 @@ interface Props {
 }
 
 export function ResultsList({ items, activeIndex, isSelected, onToggle, onToggleGroup, expandedGroups, imageMap }: Props) {
+  const isMobile = useIsMobile();
+
   if (items.length === 0) {
     return <div className="empty">No matching products.</div>;
   }
@@ -20,41 +24,30 @@ export function ResultsList({ items, activeIndex, isSelected, onToggle, onToggle
       {items.map((item, i) => {
         if (item.type === 'group') {
           const isExpanded = expandedGroups.has(item.familyId);
-          const p = item.firstProduct;
 
+          // On mobile, the FamilyListCard opens a popup instead of expanding inline.
+          // Therefore, if it's mobile, we do NOT want to render the children ProductCards inline
+          // if isExpanded happened to be true. Actually, if isMobile, we just let FamilyListCard
+          // handle the popup and we skip rendering the expanded children below.
           return (
-            <div 
+            <FamilyListCard
               key={`group-${item.familyId}`}
-              className={`card ${i === activeIndex ? 'card--active' : ''}`}
-              onClick={() => onToggleGroup(item.familyId)}
-            >
-              <div style={{ width: '18px', textAlign: 'center', color: 'var(--muted)', fontWeight: 800 }}>
-                {isExpanded ? '▼' : '▶'}
-              </div>
-              
-              <div className="card__thumbnail">
-                {item.firstProduct.customImageBase64 ? (
-                  <img src={item.firstProduct.customImageBase64} alt="" style={{ objectFit: 'contain' }} />
-                ) : imageMap[item.familyId] ? (
-                  <img src={`/product-images/${item.familyId}.jpg`} alt="" />
-                ) : (
-                  <div className="card__thumbnail-placeholder">No Img</div>
-                )}
-              </div>
-
-              <div className="card__body">
-                <div className="card__title">{p.productName}</div>
-                <div className="card__subtitle">
-                  {p.category} {p.variant && p.variant.toLowerCase() !== 'standard' ? `• ${p.variant}` : ''}
-                </div>
-              </div>
-
-              <div className="card__price" style={{ color: 'var(--muted)', fontSize: '13px', fontWeight: 'normal' }}>
-                ({item.count} size{item.count !== 1 ? 's' : ''} available)
-              </div>
-            </div>
+              familyId={item.familyId}
+              firstProduct={item.firstProduct}
+              allProducts={item.allProducts}
+              count={item.count}
+              imageMap={imageMap}
+              isExpanded={isExpanded}
+              onToggleGroup={() => onToggleGroup(item.familyId)}
+              isSelected={isSelected}
+              onToggle={onToggle}
+              active={i === activeIndex}
+            />
           );
         } else {
+          // If this is a variant card rendered under an expanded group
+          // on mobile we should NOT render it, because mobile uses popups.
+          if (isMobile) return null;
           return (
             <ProductCard
               key={item.product.id}

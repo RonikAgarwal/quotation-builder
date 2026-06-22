@@ -43,21 +43,53 @@
 }
 
 .qty-prompt-input-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
 }
 
-.qty-prompt-input-group input {
-  width: 100%;
-  padding: 10px 14px;
-  font-size: 16px;
-  border: 1px solid var(--border);
+.qty-prompt-qty-block {
+  display: flex;
+  align-items: center;
+  background: #eef5ff;
   border-radius: 8px;
-  outline: none;
-  text-align: center;
+  overflow: hidden;
+  border: 1px solid #d1e4ff;
 }
 
-.qty-prompt-input-group input:focus {
-  border-color: var(--accent);
+.qty-prompt-qty-btn {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.qty-prompt-qty-btn:active {
+  background: rgba(31, 111, 235, 0.1);
+}
+
+.qty-prompt-qty-input {
+  width: 60px;
+  height: 40px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #d1e4ff;
+  border-right: 1px solid #d1e4ff;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  padding: 0;
+}
+
+.qty-prompt-qty-input:focus {
+  outline: none;
+  background: white;
 }
 
 .qty-prompt-actions {

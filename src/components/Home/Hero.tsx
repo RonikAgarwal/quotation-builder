@@ -1,17 +1,11 @@
 
-import { motion } from 'framer-motion';
 import { ArrowRight, Star } from 'lucide-react';
 
 export function Hero({ onNavigate }: { onNavigate: () => void }) {
   return (
     <section className="home-hero">
       <div className="home-hero__container">
-        <motion.div 
-          className="home-hero__content"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
+        <div className="home-hero__content">
           <div className="home-hero__eyebrow">Trusted hardware partner since 2018</div>
           <h1 className="home-hero__title">
             Build with confidence.<br/>
@@ -43,14 +37,9 @@ export function Hero({ onNavigate }: { onNavigate: () => void }) {
               <div className="home-hero__stat-label">Brands</div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div 
-          className="home-hero__visual"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
+        <div className="home-hero__visual">
           <div className="home-hero__image-wrapper">
             <div className="home-hero__image-scroll">
               <div className="home-hero__image-track">
@@ -58,7 +47,7 @@ export function Hero({ onNavigate }: { onNavigate: () => void }) {
                 {[1, 2, 3, 4, 5, 1, 2, 3, 4, 5].map((num, idx) => (
                   <img 
                     key={idx}
-                    src={`/homepage-assets/shop-${num}.jpg`} 
+                    src={`/homepage-assets/shop-${num}.webp`} 
                     alt={`Shop Image ${num}`} 
                     className="home-hero__image"
                     onError={(e) => {
@@ -71,14 +60,14 @@ export function Hero({ onNavigate }: { onNavigate: () => void }) {
             </div>
             
             <div className="home-hero__floating-card">
-              <img src="/logo.png" alt="Logo" className="home-hero__floating-logo" />
+              <img src="/logo.webp" alt="Logo" className="home-hero__floating-logo" />
               <div>
                 <strong>Shree Ganesh Hardware</strong>
                 <span>Verified Retailer</span>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

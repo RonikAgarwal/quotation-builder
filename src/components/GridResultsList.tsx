@@ -1,5 +1,6 @@
 import type { Product, RenderItem } from '../types';
 import { FamilyGridCard } from './FamilyGridCard';
+import './GridResultsList.css';
 
 interface Props {
   items: RenderItem[];
@@ -17,13 +18,7 @@ export function GridResultsList({ items, imageMap, isSelected, onToggle }: Props
   }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-      gap: '24px',
-      padding: '12px 4px 24px 0',
-      alignItems: 'start'
-    }}>
+    <div className="grid-results-list">
       {groupItems.map(item => {
         if (item.type !== 'group') return null;
         return (

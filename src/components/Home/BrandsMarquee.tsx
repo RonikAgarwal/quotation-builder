@@ -1,13 +1,13 @@
 
 
 const brands = [
-  { name: 'Supreme', id: 'supreme', imageSrc: '/homepage-assets/supreme.png.jpeg' },
-  { name: 'Berger', id: 'berger', imageSrc: '/homepage-assets/berger.png.jpeg' },
-  { name: 'Crompton', id: 'crompton', imageSrc: '/homepage-assets/crompton.png.jpeg' },
-  { name: 'Asian Paints', id: 'asian-paints', imageSrc: '/homepage-assets/asianpaints.png.jpeg' },
-  { name: 'Pidilite', id: 'pidilite', imageSrc: '/homepage-assets/pidilite.png' },
-  { name: 'Parryware', id: 'parryware', imageSrc: '/homepage-assets/parryware.png.jpeg' },
-  { name: 'IPSA', id: 'ipsa', imageSrc: '/homepage-assets/ipsa.png.jpeg' }
+  { name: 'Supreme', id: 'supreme', imageSrc: '/homepage-assets/supreme.webp' },
+  { name: 'Berger', id: 'berger', imageSrc: '/homepage-assets/berger.webp' },
+  { name: 'Crompton', id: 'crompton', imageSrc: '/homepage-assets/crompton.webp' },
+  { name: 'Asian Paints', id: 'asian-paints', imageSrc: '/homepage-assets/asianpaints.webp' },
+  { name: 'Pidilite', id: 'pidilite', imageSrc: '/homepage-assets/pidilite.webp' },
+  { name: 'Parryware', id: 'parryware', imageSrc: '/homepage-assets/parryware.webp' },
+  { name: 'IPSA', id: 'ipsa', imageSrc: '/homepage-assets/ipsa.webp' }
 ];
 
 export function BrandsMarquee() {

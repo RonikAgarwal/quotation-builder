@@ -74,6 +74,14 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 768px) {
+  .q-headercard {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+
 .q-field {
   display: flex;
   flex-direction: column;
@@ -165,6 +173,16 @@
   gap: 0.5rem;
 }
 
+@media (max-width: 768px) {
+  .q-row {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem 1rem;
+    position: relative;
+    border-bottom: 8px solid var(--bg); /* create card gap */
+  }
+}
+
 .q-row:last-child {
   border-bottom: none;
 }
@@ -210,6 +228,50 @@
   justify-content: flex-end;
   gap: 0.25rem;
   padding-top: 0.5rem;
+}
+
+.q-row-numbers {
+  display: contents; /* Let flex items participate in parent row flexbox on desktop */
+}
+
+@media (max-width: 768px) {
+  .q-table-header {
+    display: none; /* Hide column headers on mobile */
+  }
+  .q-col--index { display: none; }
+  .q-col--product { width: 100%; min-width: unset; }
+  
+  /* Create a 2x2 grid for numbers */
+  .q-col--num { width: 100%; }
+  .q-row-numbers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .q-col--total {
+    width: 100%;
+    align-items: flex-start;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--border);
+    margin-top: 0.5rem;
+  }
+  .q-col--total::before {
+    content: "Total: ";
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-family);
+  }
+  
+  .q-col--actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding-top: 0;
+    width: auto;
+  }
 }
 
 /* INPUTS */
@@ -312,6 +374,23 @@
   margin: 0;
 }
 
+/* Mobile labels for numeric inputs */
+@media (max-width: 768px) {
+  .q-col--num::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 2px;
+    font-weight: 500;
+  }
+  .q-input--num {
+    text-align: left;
+    padding: 0.5rem;
+    border: 1px solid var(--border);
+  }
+}
+
 /* BUTTONS */
 .q-btn-icon {
   background: none;
@@ -393,6 +472,19 @@
   flex-direction: column;
   gap: 1rem;
   flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .q-summary {
+    width: 100%;
+    padding: 1rem;
+  }
+  .quotation-screen {
+    padding: 1rem;
+  }
+  .q-topbar {
+    margin-bottom: 1rem;
+  }
 }
 
 .q-summary-row {

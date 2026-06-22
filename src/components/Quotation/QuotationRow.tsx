@@ -192,7 +192,7 @@ export function QuotationRow({
             ) : item.familyId ? (
               <img 
                 id={`img-${item.familyId}`}
-                src={`/product-images/${item.familyId}.jpg`} 
+                src={`/product-images/${item.familyId}.webp`} 
                 alt=""
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
@@ -229,48 +229,50 @@ export function QuotationRow({
         </div>
       </div>
 
-      <div className="q-col q-col--num">
-        <input
-          type="text"
-          inputMode="decimal"
-          className="q-input q-input--num"
-          value={item.mrp}
-          onChange={handleMrpChange}
-          onKeyDown={blockInvalidChars}
-        />
-      </div>
+      <div className="q-row-numbers">
+        <div className="q-col q-col--num" data-label="MRP (₹)">
+          <input
+            type="text"
+            inputMode="decimal"
+            className="q-input q-input--num"
+            value={item.mrp}
+            onChange={handleMrpChange}
+            onKeyDown={blockInvalidChars}
+          />
+        </div>
 
-      <div className="q-col q-col--num">
-        <input
-          type="text"
-          inputMode="decimal"
-          className="q-input q-input--num"
-          value={item.discountPercent}
-          onChange={handleDiscountPercentChange}
-          onKeyDown={blockInvalidChars}
-        />
-      </div>
+        <div className="q-col q-col--num" data-label="Discount %">
+          <input
+            type="text"
+            inputMode="decimal"
+            className="q-input q-input--num"
+            value={item.discountPercent}
+            onChange={handleDiscountPercentChange}
+            onKeyDown={blockInvalidChars}
+          />
+        </div>
 
-      <div className="q-col q-col--num">
-        <input
-          type="text"
-          inputMode="decimal"
-          className="q-input q-input--num"
-          value={item.discountedPrice}
-          onChange={handleDiscountedPriceChange}
-          onKeyDown={blockInvalidChars}
-        />
-      </div>
+        <div className="q-col q-col--num" data-label="Price (₹)">
+          <input
+            type="text"
+            inputMode="decimal"
+            className="q-input q-input--num"
+            value={item.discountedPrice}
+            onChange={handleDiscountedPriceChange}
+            onKeyDown={blockInvalidChars}
+          />
+        </div>
 
-      <div className="q-col q-col--num">
-        <input
-          type="text"
-          inputMode="decimal"
-          className="q-input q-input--num"
-          value={item.quantity}
-          onChange={handleQuantityChange}
-          onKeyDown={blockInvalidChars}
-        />
+        <div className="q-col q-col--num" data-label="Quantity">
+          <input
+            type="text"
+            inputMode="decimal"
+            className="q-input q-input--num"
+            value={item.quantity}
+            onChange={handleQuantityChange}
+            onKeyDown={blockInvalidChars}
+          />
+        </div>
       </div>
 
       <div className="q-col q-col--total">

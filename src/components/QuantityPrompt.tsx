@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import type { Product } from '../types';
 import './QuantityPrompt.css';
 
@@ -11,14 +12,6 @@ interface Props {
 export const QuantityPrompt: React.FC<Props> = ({ product, onConfirm, onCancel }) => {
   const [quantity, setQuantity] = useState('1');
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // Focus and select the input on mount
-    if (inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -47,14 +40,35 @@ export const QuantityPrompt: React.FC<Props> = ({ product, onConfirm, onCancel }
         {product.displaySubtitle && <p className="qty-prompt-sub">{product.displaySubtitle}</p>}
         
         <div className="qty-prompt-input-group">
-          <input
-            ref={inputRef}
-            type="number"
-            min="1"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
+          <div className="qty-prompt-qty-block">
+            <button 
+              className="qty-prompt-qty-btn"
+              onClick={() => {
+                const current = parseInt(quantity, 10) || 0;
+                if (current > 1) setQuantity((current - 1).toString());
+              }}
+            >
+              <Minus size={18} />
+            </button>
+            <input
+              ref={inputRef}
+              type="number"
+              min="1"
+              className="qty-prompt-qty-input"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <button 
+              className="qty-prompt-qty-btn"
+              onClick={() => {
+                const current = parseInt(quantity, 10) || 0;
+                setQuantity((current + 1).toString());
+              }}
+            >
+              <Plus size={18} />
+            </button>
+          </div>
         </div>
 
         <div className="qty-prompt-actions">

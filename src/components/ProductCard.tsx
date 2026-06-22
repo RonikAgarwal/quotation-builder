@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { Product } from '../types';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 interface Props {
   product: Product;
@@ -14,6 +15,7 @@ interface Props {
 // formatting logic is duplicated here.
 export const ProductCard = memo(function ProductCard({ product, selected, active, onToggle, imageMap, isVariant }: Props) {
   const hasImage = imageMap[product.familyId];
+  const isMobile = useIsMobile();
 
   let classNames = 'card';
   if (active) classNames += ' card--active';
@@ -38,7 +40,7 @@ export const ProductCard = memo(function ProductCard({ product, selected, active
         {product.customImageBase64 ? (
           <img src={product.customImageBase64} alt="" style={{ objectFit: 'contain' }} />
         ) : hasImage ? (
-          <img src={`/product-images/${product.familyId}.jpg`} alt="" />
+          <img src={`/product-images/${product.familyId}.webp`} alt="" />
         ) : (
           <div className="card__thumbnail-placeholder" />
         )}
@@ -49,7 +51,7 @@ export const ProductCard = memo(function ProductCard({ product, selected, active
           {product.displaySubtitle && (
             <div className="card__subtitle" style={{ margin: 0 }}>{product.displaySubtitle}</div>
           )}
-          {product.sourcePage > 0 && (
+          {!isMobile && product.sourcePage > 0 && (
             <a href={`#/pdf/${product.sourcePage}`} className="page-link" onClick={e => e.stopPropagation()}>
               📄 {product.sourcePage}
             </a>

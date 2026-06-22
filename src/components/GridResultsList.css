@@ -1,0 +1,15 @@
+.grid-results-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  padding: 12px 4px 24px 0;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .grid-results-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px 12px 24px 12px;
+  }
+}

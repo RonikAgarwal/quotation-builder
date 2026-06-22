@@ -120,7 +120,7 @@ export function ImageManager({ catalog, imageMap, onImageUploaded, onBack }: Pro
       <div className="img-grid">
         {filteredGroups.map(g => {
           const hasImage = imageMap[g.familyId];
-          const imgSrc = hasImage ? `/product-images/${g.familyId}.jpg?t=${Date.now()}` : null;
+          const imgSrc = hasImage ? `/product-images/${g.familyId}.webp?t=${Date.now()}` : null;
           const isDragHover = dragHoverId === g.familyId;
 
           return (
